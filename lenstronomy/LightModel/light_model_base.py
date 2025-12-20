@@ -42,6 +42,8 @@ _MODELS_SUPPORTED = [
     "LINEAR",
     "LINEAR_ELLIPSE",
     "LINE_PROFILE",
+    "MGE_MULTI_SET",
+    "MGE_MULTI_SET_POINT",
 ]
 
 
@@ -212,6 +214,15 @@ class LightModelBase(object):
                 from lenstronomy.LightModel.Profiles.lineprofile import LineProfile
 
                 self.func_list.append(LineProfile(**profile_kwargs))
+            elif profile_type == "MGE_MULTI_SET":
+                from lenstronomy.LightModel.Profiles.mge_multi_set import MGEMultiSet
+                kwargs = profile_kwargs if profile_kwargs is not None else {}
+                self.func_list.append(MGEMultiSet(**kwargs))
+                
+            elif profile_type == "MGE_MULTI_SET_POINT":
+                from lenstronomy.LightModel.Profiles.mge_multi_set import MGEMultiSetPointSource
+                kwargs = profile_kwargs if profile_kwargs is not None else {}
+                self.func_list.append(MGEMultiSetPointSource(**kwargs))
             else:
                 raise ValueError(
                     "No light model of type %s found! Supported are the following models: %s"

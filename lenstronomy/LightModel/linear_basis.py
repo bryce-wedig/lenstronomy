@@ -95,6 +95,15 @@ class LinearBasis(LightModelBase):
                     raise ValueError(
                         "'{}' model does not support function split".format(model)
                     )
+                elif model in ["MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
+                    # MGE models have multiple linear amplitude parameters
+                    num = self.func_list[i].num_linear
+                    # Create unit amplitudes for basis functions
+                    kwargs_copy = kwargs_list[i].copy()
+                    kwargs_copy["amp"] = np.ones(num)
+                    response_set = self.func_list[i].function_split(x, y, **kwargs_copy)
+                    response += response_set
+                    n += num
                 else:
                     raise ValueError("model type %s not valid!" % model)
         return response, n
@@ -169,6 +178,9 @@ class LinearBasis(LightModelBase):
                 n_list += [
                     num_param
                 ]  # TODO : find a way to make it the number of source pixels
+            elif model in ["MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
+                num = self.func_list[i].num_linear
+                n_list.append(num)
             else:
                 raise ValueError("model type %s not valid!" % model)
         return n_list
@@ -234,6 +246,11 @@ class LinearBasis(LightModelBase):
                 n_scales = kwargs_list[k]["n_scales"]
                 n_pixels = kwargs_list[k]["n_pixels"]
                 num_param = int(n_scales * n_pixels)
+                kwargs_list[k]["amp"] = param[i : i + num_param]
+                i += num_param
+            if model in ["MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
+                # MGE has array of amplitudes
+                num_param = self.func_list[k].num_linear
                 kwargs_list[k]["amp"] = param[i : i + num_param]
                 i += num_param
             else:
@@ -307,4 +324,8 @@ class LinearBasis(LightModelBase):
                     if np.any(np.array(kwargs_list[k]["amp"]) < 0):
                         pos_bool = False
                         break
+                elif model in ["MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
+                    amp = kwargs_list[k].get("amp", np.array([1.0]))
+                    if np.any(amp < 0):
+                        return False
         return pos_bool
