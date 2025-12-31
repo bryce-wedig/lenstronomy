@@ -210,8 +210,8 @@ class ModelBand(object):
             model, error_map=error_map
         )
         self.reduced_x2 = self._bandmodel.reduced_chi2(model, error_map=error_map)
-        if verbose:
-            print("reduced chi^2 of data ", band_index, "= ", self.reduced_x2)
+        # if verbose:
+        #     print("reduced chi^2 of data ", band_index, "= ", self.reduced_x2)
 
         self._model = model
         self._cov_param = cov_param
