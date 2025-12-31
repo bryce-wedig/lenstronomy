@@ -4,6 +4,8 @@ from lenstronomy.Util import util
 from lenstronomy.Util import primary_beam_util
 from lenstronomy.ImSim.Numerics.convolution import PixelKernelConvolution
 import numpy as np
+from scipy.optimize import nnls
+
 
 __all__ = ["ImageLinearFit"]
 
@@ -124,9 +126,24 @@ class ImageLinearFit(ImageModel):
                 self, kwargs_lens, kwargs_ps, kwargs_special=kwargs_special
             )
             d = self.data_response
-            param, cov_param, wls_model = de_lens.get_param_WLS(
-                A.T, 1 / C_D_response, d, inv_bool=inv_bool
-            )
+
+            # param, cov_param, wls_model = de_lens.get_param_WLS(
+            #     A.T, 1 / C_D_response, d, inv_bool=inv_bool
+            # )
+
+            # Use NNLS instead of WLS for better stability with MGE profiles
+            # Ensure correct matrix orientation
+            A_solve = A.T if A.shape[0] < A.shape[1] else A
+
+            # Use NNLS (non-negative least squares) - more stable for MGE
+            param, residual = nnls(A_solve, d)
+
+            # Compute model
+            wls_model = A_solve @ param
+
+            # Covariance not available with NNLS, set to None
+            cov_param = None
+
             model = self.array_masked2image(wls_model)
             _, _, _, _ = ImageLinearFit.update_linear_kwargs(
                 self, param, kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps

@@ -66,13 +66,13 @@ class LinearBasis(LightModelBase):
                     kwargs_new = kwargs_list[i].copy()
                     kwargs_new.update(new)
                     response += self.func_list[i].function_split(x, y, **kwargs_new)
-                    n += num
-                elif model in ["MGE_SET", "MGE_SET_ELLIPSE"]:
+                    n += num        
+                elif model in ["MGE_SET", "MGE_SET_ELLIPSE", "MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
                     num = self.func_list[i].num_linear
-                    new = {"amp": np.ones(num)}
-                    kwargs_new = kwargs_list[i].copy()
-                    kwargs_new.update(new)
-                    response += self.func_list[i].function_split(x, y, **kwargs_new)
+                    kwargs_copy = kwargs_list[i].copy()
+                    kwargs_copy["amp"] = np.ones(num)
+                    response_set = self.func_list[i].function_split(x, y, **kwargs_copy)
+                    response += response_set
                     n += num
                 elif model in [
                     "SHAPELETS",
@@ -95,15 +95,6 @@ class LinearBasis(LightModelBase):
                     raise ValueError(
                         "'{}' model does not support function split".format(model)
                     )
-                elif model in ["MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
-                    # MGE models have multiple linear amplitude parameters
-                    num = self.func_list[i].num_linear
-                    # Create unit amplitudes for basis functions
-                    kwargs_copy = kwargs_list[i].copy()
-                    kwargs_copy["amp"] = np.ones(num)
-                    response_set = self.func_list[i].function_split(x, y, **kwargs_copy)
-                    response += response_set
-                    n += num
                 else:
                     raise ValueError("model type %s not valid!" % model)
         return response, n
@@ -156,7 +147,7 @@ class LinearBasis(LightModelBase):
             elif model in ["MULTI_GAUSSIAN", "MULTI_GAUSSIAN_ELLIPSE"]:
                 num = len(kwargs_list[i]["sigma"])
                 n_list += [num]
-            elif model in ["MGE_SET", "MGE_SET_ELLIPSE"]:
+            elif model in ["MGE_SET", "MGE_SET_ELLIPSE", "MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
                 num = self.func_list[i].num_linear
                 n_list += [num]
             elif model in [
@@ -178,9 +169,6 @@ class LinearBasis(LightModelBase):
                 n_list += [
                     num_param
                 ]  # TODO : find a way to make it the number of source pixels
-            elif model in ["MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
-                num = self.func_list[i].num_linear
-                n_list.append(num)
             else:
                 raise ValueError("model type %s not valid!" % model)
         return n_list
@@ -225,7 +213,7 @@ class LinearBasis(LightModelBase):
                 num_param = len(kwargs_list[k]["sigma"])
                 kwargs_list[k]["amp"] = param[i : i + num_param]
                 i += num_param
-            elif model in ["MGE_SET", "MGE_SET_ELLIPSE"]:
+            elif model in ["MGE_SET", "MGE_SET_ELLIPSE", "MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
                 num_param = self.func_list[k].num_linear
                 kwargs_list[k]["amp"] = param[i : i + num_param]
                 i += num_param
@@ -248,8 +236,7 @@ class LinearBasis(LightModelBase):
                 num_param = int(n_scales * n_pixels)
                 kwargs_list[k]["amp"] = param[i : i + num_param]
                 i += num_param
-            if model in ["MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
-                # MGE has array of amplitudes
+            elif model in ["MGE_SET", "MGE_SET_ELLIPSE", "MGE_MULTI_SET", "MGE_MULTI_SET_POINT"]:
                 num_param = self.func_list[k].num_linear
                 kwargs_list[k]["amp"] = param[i : i + num_param]
                 i += num_param
@@ -320,6 +307,8 @@ class LinearBasis(LightModelBase):
                     "SERSIC",
                     "SERSIC_ELLIPSE",
                     "SERSIC_ELLIPSE_FLEXION",
+                    "MGE_MULTI_SET",
+                    "MGE_MULTI_SET_POINT",
                 ]:
                     if np.any(np.array(kwargs_list[k]["amp"]) < 0):
                         pos_bool = False
