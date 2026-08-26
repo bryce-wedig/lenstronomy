@@ -70,11 +70,11 @@ class Shear(LensProfileBase):
 
 class ShearGammaPsi(LensProfileBase):
     """
-    class to model a shear field with shear strength and direction. The translation ot the cartesian shear distortions
-    is as follow:
+    Class to model a shear field with shear strength and direction. The translation of the Cartesian shear distortions
+    is as follows:
 
     .. math::
-        \\gamma_1 = \\gamma_{ext} \\cos(2 \\phi_{ext})
+        \\gamma_1 = \\gamma_{ext} \\cos(2 \\phi_{ext}) \\\\
         \\gamma_2 = \\gamma_{ext} \\sin(2 \\phi_{ext})
 
     """
